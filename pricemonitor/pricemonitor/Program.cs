@@ -46,35 +46,43 @@ namespace pricemonitor
                 IWebElement pricetag = driver.FindElement(By.XPath("//span[@class='price']"));
                 string ooo = pricetag.GetAttribute("innerHTML").ToString();
                 double price = Convert.ToDouble(ooo.Replace(" CAD", "").Replace("$",""));
-                IWebElement sizeelement = driver.FindElement(By.XPath("//select[@id='size']"));
-                string sizeString = sizeelement.Text;
-                string[] sizeList = sizeString.Split(
-                    new[] { "\r\n", "\r", "\n" },
-                    StringSplitOptions.None
-                );
-                xlRange.Cells[tmp1.row, 4].Value = price;
-                //only xx left, sold out, normal
-                foreach(string tmpsize in sizeList)
+                //check if size exist
+                if (driver.FindElements(By.XPath("//select[@id='size']")).Count() != 0)
                 {
-                    if (tmpsize.Contains(tmp1.size))
+                    IWebElement sizeelement = driver.FindElement(By.XPath("//select[@id='size']"));
+                    string sizeString = sizeelement.Text;
+                    string[] sizeList = sizeString.Split(
+                        new[] { "\r\n", "\r", "\n" },
+                        StringSplitOptions.None
+                    );
+                    //only xx left, sold out, normal
+                    foreach (string tmpsize in sizeList)
                     {
-                        if (tmpsize.Contains("Out"))
+                        if (tmpsize.Contains(tmp1.size))
                         {
-                            //sold out send notification
-                            email(tmp1, 3);
-                        }
-                        else if (tmpsize.Contains("left"))
-                        {
-                            //only serveral left buybuybuy!
-                            email(tmp1, 2);
+                            if (tmpsize.Contains("Out"))
+                            {
+                                //sold out send notification
+                                email(tmp1, 3);
+                            }
+                            else if (tmpsize.Contains("left"))
+                            {
+                                //only serveral left buybuybuy!
+                                email(tmp1, 2);
 
-                        }
-                        else
-                        {
-                            //do nothing
+                            }
+                            else
+                            {
+                                //do nothing
+                            }
                         }
                     }
                 }
+                if (driver.FindElements(By.XPath("//span[@class='text-no-transform']")).Count() != 0)
+                {
+                    email(tmp1, 2);
+                }
+                xlRange.Cells[tmp1.row, 4].Value = price;
                 if (price < tmp1.lowest)
                 {
                     xlRange.Cells[tmp1.row, 2].Value = price;
